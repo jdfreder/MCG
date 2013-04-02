@@ -4,7 +4,7 @@
 % or received any unauthorized assistance
 % on this assignment/examination.
 %
-% Signed: <Name>
-% Dated: <Date>
+% Signed: Chad Rexrode
+% Dated: 4/2/13
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
