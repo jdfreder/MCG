@@ -1,3 +1,4 @@
+#import numpy as np
 from numpy import *
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
@@ -25,11 +26,10 @@ ESyEr_H=Edata[:,7]
 ESyEr_L=Edata[:,8]
 
 def func(s,Z,M,Y1,Y2,n1,n2):
-    m=.938 #Proton mass GeV
-    sM=(2*m+M)**2 #Mass (GeV/c^2)^2
-    hbar=6.58211928*10**-16 #eV*s
-    c=3e8 #m/s
-    s=5
+    m=.938
+    sM=(2*m+M)**2
+    hbar=6.58211928*10**-16
+    c=3e8
     sigma=Z+pi*(hbar*c)**2/M**2*(log((s)**2/sM))**2+Y1*(sM/(s)**2)**n1-Y2*(sM/(s)**2)**n2
     return sigma
 
@@ -66,23 +66,22 @@ def SigI(BE):
 
 def DisplayData():
     """Displays the Particle Data Group Data."""
-    loglog(Plab,Sig,ls=' ',marker='.',markersize=3,color='black')
-    loglog(EPlab,ESig,ls=' ',marker='.',markersize=3,color='black')
-    loglog(sp,func(sp,popt[0],popt[1],popt[2],popt[3],popt[4],popt[5]),color='b',lw=1.5)
-    loglog(sp2,func2(sp2,6.566,.00001),lw=1.5)
-    loglog(sp3,func4(sp3,9*10**-2,1.21),color='b',lw=1.5)
-    loglog(s2[100:],func(s2[100:],popt2[0],popt2[1],popt2[2],popt2[3],popt2[4],popt2[5]),color='b',lw=1.5)
-    errorbar(Plab,Sig,xerr=[Plab-Plab_min,Plab_max-Plab],yerr=[StEr_L,StEr_H],ms=.5,mew=0,fmt=None,ecolor='black')
-    errorbar(EPlab,ESig,xerr=[EPlab-EPlab_min,EPlab_max-EPlab],yerr=[EStEr_L,EStEr_H],ms=.5,mew=0,fmt=None,ecolor='black')
-    annotate("$P_{lab}(GeV/c)$",fontsize=16,xy=(.1,1),xytext=(10e5,1.5))
-    annotate("total",fontsize=11,xy=(300,60),xytext=(300,60))
-    annotate("elastic",fontsize=11,xy=(300,10),xytext=(300,10))
-    annotate("pp",fontsize=11,xy=(70,15),xytext=(68,18))
-    ylabel("Cross Section (mb)",fontsize=12)
-    ylim(1,400)
-    grid(which='minor',axis='y')
-    grid(which='major',axis='x')
-    figsize(9,6)
+    plt.loglog(Plab,Sig,ls=' ',marker='.',markersize=3,color='black')
+    plt.loglog(EPlab,ESig,ls=' ',marker='.',markersize=3,color='black')
+    plt.loglog(sp,func(sp,popt[0],popt[1],popt[2],popt[3],popt[4],popt[5]),color='b',lw=1.5)
+    plt.loglog(sp2,func2(sp2,6.566,.00001),lw=1.5)
+    plt.loglog(sp3,func4(sp3,9*10**-2,1.21),color='b',lw=1.5)
+    plt.loglog(s2[100:],func(s2[100:],popt2[0],popt2[1],popt2[2],popt2[3],popt2[4],popt2[5]),color='b',lw=1.5)
+    plt.errorbar(Plab,Sig,xerr=[Plab-Plab_min,Plab_max-Plab],yerr=[StEr_L,StEr_H],ms=.5,mew=0,fmt=None,ecolor='black')
+    plt.errorbar(EPlab,ESig,xerr=[EPlab-EPlab_min,EPlab_max-EPlab],yerr=[EStEr_L,EStEr_H],ms=.5,mew=0,fmt=None,ecolor='black')
+    plt.annotate("$P_{lab}(GeV/c)$",fontsize=16,xy=(.1,1),xytext=(10e5,1.5))
+    plt.annotate("total",fontsize=11,xy=(300,60),xytext=(300,60))
+    plt.annotate("elastic",fontsize=11,xy=(300,10),xytext=(300,10))
+    plt.annotate("pp",fontsize=11,xy=(70,15),xytext=(68,18))
+    plt.ylabel("Cross Section (mb)",fontsize=12)
+    plt.ylim(1,400)
+    plt.grid(which='minor',axis='y')
+    plt.grid(which='major',axis='x')
 
 def WoodsSaxon(y):
     """Returns the Woods-Saxon Density profile for given element or atomic number"""
@@ -117,9 +116,6 @@ def Collider(N,Particle,BeamEnergy):
     collisions. Additionally returns the interactions distance of the nucleons 
     given the choosen beam energy.
     """
-    #N=1 #Set number of times to run
-    #Particle='U' #Set particle (See cell #3 for list of applicable particles and amu)
-    #BeamEnergy=2*10**8 #Set Beam Energy [GeV]
     w={'C':0,'O':-.051,'Al':0,'S':0,'Ca':-.161,'Ni':-.1308,'Cu':0,'W':0,'Au':0,'Pb':0,'U':0}
     A={'C':12,'O':16,'Al':27,'S':32,'Ca':40,'Ni':58,'Cu':63,'W':186,'Au':197,'Pb':208,'U':238}
     R={'C':2.47,'O':2.608,'Al':3.07,'S':3.458,'Ca':3.76,'Ni':4.309,'Cu':4.2,'W':6.51,'Au':6.38,'Pb':6.68,'U':6.68}
@@ -162,7 +158,7 @@ def Collider(N,Particle,BeamEnergy):
         for i in Colide2[:,0]:
             if i<100:
                 Npart[L]+=1
-    return b,Nucleus1,Nucleus2,Npart,Ncoll,Maxr
+    return b,Nucleus1,Nucleus2,Npart,Ncoll,Maxr,Colide1,Colide2
 
 def PlotNuclei(Nucleus1,Nucleus2,Particle):
     """
