@@ -209,3 +209,12 @@ def PlotCollision(N,Particle,ImpactDistance,Nucleus1,Nucleus2,Participants,Binar
     xlabel('Horizontal Position [fm]',fontsize=15)
     ylabel('Vertical Position [fm]',fontsize=15)
     fig.set_size_inches(6,6)
+
+PlotResults(b,Npart,Ncoll):
+    """Plots the number or wounded nucleons and binary collisions as a function of impact parameter."""
+    scatter(b,Npart,label='Participants',color='b')
+    scatter(b,Ncoll,label='Collisions',color='r')
+    xlabel('Separation distance [fm]',fontsize=14)
+    xlim((0,max(b)))
+    ylim((0,max(Ncoll)*1.1))
+    legend()
