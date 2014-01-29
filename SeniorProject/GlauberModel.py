@@ -106,15 +106,16 @@ def distribute1D(x,prob,N):
     B=np.searchsorted(A,z)
     return x[B]
 
-def Collider(N,Particle,BeamEnergy):
+def Collider(N,Particle,Energy):
     """
-    Simulates N collisions given specific Element and Beam Energy [GeV]. 
+    Simulates N collisions given specific Element and Center of Mass Energy [GeV]. 
     Returns the matrices that correspond to center-to-center seperation distance 
     (Random value between 0 and 150% of the Nucleus diameter [fm]), 
     Nuclei 1 and 2, number participating nucleons, and the number of binary 
     collisions. Additionally returns the interactions distance of the nucleons 
     given the choosen beam energy.
     """
+    Plab=((Energy**2/(2*.938)-.938)**2-.938**2)**(1/2.)
     w={'C':0,'O':-.051,'Al':0,'S':0,'Ca':-.161,'Ni':-.1308,'Cu':0,'W':0,'Au':0,'Pb':0,'U':0}
     A={'C':12,'O':16,'Al':27,'S':32,'Ca':40,'Ni':58,'Cu':63,'W':186,'Au':197,'Pb':208,'U':238}
     R={'C':2.47,'O':2.608,'Al':3.07,'S':3.458,'Ca':3.76,'Ni':4.309,'Cu':4.2,'W':6.51,'Au':6.38,'Pb':6.68,'U':6.68}
@@ -124,7 +125,7 @@ def Collider(N,Particle,BeamEnergy):
     r=np.arange(0,1.5*Rp+.01,.01)
     Npart=np.zeros(N,float)
     Ncoll=np.zeros(N,float)
-    Maxr=(float(SigI(BeamEnergy))/np.pi)**.5
+    Maxr=(float(SigI(Plab))/np.pi)**.5
     for L in range(N):
         Nucleus1=np.zeros((A[Particle],2),float)
         Nucleus2=np.zeros((A[Particle],2),float)
