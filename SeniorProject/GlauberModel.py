@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
+#Importing data from particle data group
 data=np.loadtxt("PDG_Data.txt",float,usecols=(0,1,2,3,4,5,6,7,8))
 Point=data[:,0]
 Plab=data[:,1] #GeV/c
@@ -24,6 +25,7 @@ EStEr_L=Edata[:,6]
 ESyEr_H=Edata[:,7]
 ESyEr_L=Edata[:,8]
 
+#Fitting a function to PDG's total data
 def func(s,Z,M,Y1,Y2,n1,n2):
     m=.938
     sM=(2*m+M)**2
@@ -32,6 +34,7 @@ def func(s,Z,M,Y1,Y2,n1,n2):
     sigma=Z+np.pi*(hbar*c)**2/M**2*(np.log((s)**2/sM))**2+Y1*(sM/(s)**2)**n1-Y2*(sM/(s)**2)**n2
     return sigma
 
+#Func2-4 define fits for PDG's elastic data
 def func2(s,a,b):
     return a*np.e**(b*s)+.42
 
@@ -41,6 +44,7 @@ def func3(s,a,b):
 def func4(s,a,b):
     return np.e**(a*np.log(s)+b)
 
+#Set up parameters to plot PDG data with fits
 s=EPlab[:]
 y=ESig[:]
 p0=[5,2.15,12.72,7.35,.462,.55]
@@ -61,7 +65,10 @@ SigInel=func(g,popt2[0],popt2[1],popt2[2],popt2[3],popt2[4],popt2[5])-func(g,pop
 
 def SigI(BE):
     """Returns the cross-sectional area [fm^2] for given beam energy [GeV]"""
-    return .1*(func(BE,popt2[0],popt2[1],popt2[2],popt2[3],popt2[4],popt2[5])-func(BE,popt[0],popt[1],popt[2],popt[3],popt[4],popt[5]))
+    if BE<4*10**3:
+        return .1*(func(BE,popt2[0],popt2[1],popt2[2],popt2[3],popt2[4],popt2[5])-func(BE,popt[0],popt[1],popt[2],popt[3],popt[4],popt[5]))
+    else:
+        return .1*(func(BE,popt2[0],popt2[1],popt2[2],popt2[3],popt2[4],popt2[5])-np.e**(9*10*-2*np.log(BE)+1.21))
 
 def DisplayData():
     """Displays the Particle Data Group Data."""
@@ -115,35 +122,48 @@ def Collider(N,Particle,Energy):
     collisions. Additionally returns the interactions distance of the nucleons 
     given the choosen beam energy.
     """
-    Plab=((Energy**2/(2*.938)-.938)**2-.938**2)**(1/2.)
+    Plab=((Energy**2/(2*.938)-.938)**2-.938**2)**(1/2.) #Convert CM energy to corresponding Plab
+    
+    #wood saxon parameters
     w={'C':0,'O':-.051,'Al':0,'S':0,'Ca':-.161,'Ni':-.1308,'Cu':0,'W':0,'Au':0,'Pb':0,'U':0}
     A={'C':12,'O':16,'Al':27,'S':32,'Ca':40,'Ni':58,'Cu':63,'W':186,'Au':197,'Pb':208,'U':238}
     R={'C':2.47,'O':2.608,'Al':3.07,'S':3.458,'Ca':3.76,'Ni':4.309,'Cu':4.2,'W':6.51,'Au':6.38,'Pb':6.68,'U':6.68}
     a={'C':0,'O':.513,'Al':.519,'S':.61,'Ca':.586,'Ni':.516,'Cu':.596,'W':.535,'Au':.535,'Pb':.546,'U':.6}
+    #Set Rp equal to the number of nucleons in a nucleus
     Rp=R[Particle] 
-    b=2*Rp*np.random.random_sample(N)
-    r=np.arange(0,1.5*Rp+.01,.01)
+    b=2*Rp*np.random.random_sample(N) #Create array of random impact parameter
+    r=np.arange(0,1.5*Rp+.01,.01) #Array for radial data used for plotting
     Npart=np.zeros(N,float)
     Ncoll=np.zeros(N,float)
-    Maxr=(float(SigI(Plab))/np.pi)**.5
+    Sig1=SigI(Plab) #Find cross-sectional area from Plab from PDG fit functions. See function SigI.
+    Maxr=(float(SigI(Plab))/np.pi)**.5 #Radius within which 2 nucleons will interact
+    #Runs N number of times; each run creates a new array containing useful parameters, Ncoll, Npart, etc.
     for L in range(N):
         Nucleus1=np.zeros((A[Particle],2),float)
         Nucleus2=np.zeros((A[Particle],2),float)
-        Nucleus1[:,0]=distribute1D(r,WoodsSaxon(Particle),A[Particle])[:]
+        Nucleus1[:,0]=distribute1D(r,WoodsSaxon(Particle),A[Particle])[:] #Create nuclei from woods saxon function
         Nucleus2[:,0]=distribute1D(r,WoodsSaxon(Particle),A[Particle])[:]
         for i in range(A[Particle]):
-            Nucleus1[i,1]=2*np.pi*np.random.random_sample(1)
-            Nucleus2[i,1]=2*np.pi*np.random.random_sample(1)
-        Colide1=np.copy(Nucleus1)
-        Colide2=np.copy(Nucleus2)
-        for p1 in range(A[Particle]):
-            count=0
-            for p2 in range(A[Particle]):
+            Nucleus1[i,1]=2*np.pi*np.random.random_sample(1) #give each nucleon in both nuclei a random azimuthal angle
+            Nucleus2[i,1]=2*np.pi*np.random.random_sample(1) #from 0 to 2*pi
+        Colide1=np.copy(Nucleus1) #Creates a copy of the original nuclei
+        Colide2=np.copy(Nucleus2) #Colide arrays are used for plotting only
+        for p1 in range(A[Particle]): #Loops through all nucleons in Nucleus 1
+            count=0 #Arbitrary count variable used to determine whether a nucleon escaped the collision unwounded
+            for p2 in range(A[Particle]): #Loops through all nucleons in Nucleus 2
+                #x distance between two nucleons is: b+r1*cos(a1)-r2*cos(a2) where b is the random impact parameter, r is the radial distance from the center of the nucleus, and a is the azimuthal angle
+                #y distance between two nucleons is r1*sin(a1)-r2*sin(a2)
+                #distance between two nucleons is sqrt(x^2+y^2). If statements check to see if this value is smaller than Maxr
                 if ((b[L]+Nucleus2[p2,0]*np.cos(Nucleus2[p2,1])-Nucleus1[p1,0]*np.cos(Nucleus1[p1,1]))**2+(Nucleus2[p2,0]*np.sin(Nucleus2[p2,1])-Nucleus1[p1,0]*np.sin(Nucleus1[p1,1]))**2)**.5 <= Maxr:
                     Ncoll[L]+=1
+                    #If distance between nucleons is smaller than maxr, nucleons interact and 1 collision is counted.
                 if ((b[L]+Nucleus2[p2,0]*np.cos(Nucleus2[p2,1])-Nucleus1[p1,0]*np.cos(Nucleus1[p1,1]))**2+(Nucleus2[p2,0]*np.sin(Nucleus2[p2,1])-Nucleus1[p1,0]*np.sin(Nucleus1[p1,1]))**2)**.5 > Maxr:
                     count+=1
+                    #If distance is greater than maxr, +1 is added to count
                 if count==A[Particle]:
+                    #If count reaches the number of total nucleons in a nucleus, we infer that
+                    #that nucleon has not hit any other nucleons in the other nucleus. Therefore
+                    #this nucleon is tagged in the colide array.
                     Colide1[p1]=1000
         for p2 in range(A[Particle]):
             count=0
@@ -152,6 +172,7 @@ def Collider(N,Particle,Energy):
                     count+=1
                 if count==A[Particle]:
                     Colide2[p2]=1000
+        #any nucleons not tagged in the colide array have therefore participated in the collisoin and are added to Npart
         for i in Colide1[:,0]:
             if i<1000:
                 Npart[L]+=1
@@ -195,6 +216,7 @@ def PlotCollision(N,Particle,ImpactDistance,Nucleus1,Nucleus2,Participants,Binar
     N2=plt.Circle((Rp+b[N-1],Rp),Rp,color='g',fill=False,lw=2)
     fig = plt.gcf()
     ax = plt.gca()
+    #Any nucleons tagged in the colide array of the COLLIDE FUNCTION are not plotted in red because they have not interacted with any other nucleons
     ax.plot(Rp+Nucleus1[:,0]*np.cos(Nucleus1[:,1]),Rp+Nucleus1[:,0]*np.sin(Nucleus1[:,1]),'b.',ms=26,alpha=.8,mew=1,mec='blue')
     ax.plot(Rp+b[N-1]+Nucleus2[:,0]*np.cos(Nucleus2[:,1]),Rp+Nucleus2[:,0]*np.sin(Nucleus2[:,1]),'g.',ms=26,alpha=.8,mew=1,mec='green')
     ax.plot(Rp+Col1[:,0]*np.cos(Col1[:,1]),Rp+Col1[:,0]*np.sin(Col1[:,1]),'r.',ms=26,alpha=.4,mew=1,mec='red')

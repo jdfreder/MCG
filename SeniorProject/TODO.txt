@@ -1,0 +1,5 @@
+Fully comment code to allow anyone to follow what you do.
+print test code to figure out why Ncoll is not counting correctly - then fix it. 
+Check fm^2=.1mb (or .1*fm^2=mb?)
+Have SigI print out value in fm^2
+write IF statement comparing maxR as an equation. check equation is correct
