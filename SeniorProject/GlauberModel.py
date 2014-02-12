@@ -89,7 +89,7 @@ def DisplayData():
     plt.grid(which='minor',axis='y')
     plt.grid(which='major',axis='x')
 
-def WoodsSaxon(y):
+def WoodsSaxon(y,v):
     """Returns the Woods-Saxon Density profile for given element or atomic number"""
     A={'C':12,'O':16,'Al':27,'S':32,'Ca':40,'Ni':58,'Cu':63,'W':186,'Au':197,'Pb':208,'U':238}
     if type(y)==str:
@@ -102,7 +102,10 @@ def WoodsSaxon(y):
     w={'C':0,'O':-.051,'Al':0,'S':0,'Ca':-.161,'Ni':-.1308,'Cu':0,'W':0,'Au':0,'Pb':0,'U':0}
     R={'C':2.47,'O':2.608,'Al':3.07,'S':3.458,'Ca':3.76,'Ni':4.309,'Cu':4.2,'W':6.51,'Au':6.38,'Pb':6.68,'U':6.68}
     r=np.arange(0,1.5*R[x]+.01,.01)
-    Rho=(1+w[x]*(r**2)/(R[x]**2))/(1+np.e**((r-R[x])/a[x]))
+    if v==True:
+        Rho=4*np.pi*r**2*(1+w[x]*(r**2)/(R[x]**2))/(1+np.e**((r-R[x])/a[x]))
+    else:
+        Rho=(1+w[x]*(r**2)/(R[x]**2))/(1+np.e**((r-R[x])/a[x]))
     return Rho
 
 def distribute1D(x,prob,N):
@@ -113,7 +116,7 @@ def distribute1D(x,prob,N):
     B=np.searchsorted(A,z)
     return x[B]
 
-def Collider(N,Particle,Energy):
+def Collider(N,Particle,Energy,v):
     """
     Simulates N collisions given specific Element and Center of Mass Energy [GeV]. 
     Returns the matrices that correspond to center-to-center seperation distance 
@@ -141,8 +144,8 @@ def Collider(N,Particle,Energy):
     for L in range(N):
         Nucleus1=np.zeros((A[Particle],2),float)
         Nucleus2=np.zeros((A[Particle],2),float)
-        Nucleus1[:,0]=distribute1D(r,WoodsSaxon(Particle),A[Particle])[:] #Create nuclei from woods saxon function
-        Nucleus2[:,0]=distribute1D(r,WoodsSaxon(Particle),A[Particle])[:]
+        Nucleus1[:,0]=distribute1D(r,WoodsSaxon(Particle,v),A[Particle])[:] #Create nuclei from woods saxon function
+        Nucleus2[:,0]=distribute1D(r,WoodsSaxon(Particle,v),A[Particle])[:]
         for i in range(A[Particle]):
             Nucleus1[i,1]=2*np.pi*np.random.random_sample(1) #give each nucleon in both nuclei a random azimuthal angle
             Nucleus2[i,1]=2*np.pi*np.random.random_sample(1) #from 0 to 2*pi
@@ -181,7 +184,7 @@ def Collider(N,Particle,Energy):
                 Npart[L]+=1
     return b,Nucleus1,Nucleus2,Npart,Ncoll,Maxr,Colide1,Colide2
 
-def PlotNuclei(Nucleus1,Nucleus2,Particle):
+def PlotNuclei(Nucleus1,Nucleus2,Particle,v):
     """
     Plots a histogram showing the relation between radial distance and 
     the number of nucleons from each nucleus. 
@@ -194,11 +197,11 @@ def PlotNuclei(Nucleus1,Nucleus2,Particle):
     Rp=R[Particle]
     r=np.arange(0,1.5*Rp+.01,.01)
     n1,bins,patches=plt.hist(Nucleus1[:,0],15,normed=True,alpha=1)
-    n2,bins,patches=plt.hist(Nucleus2[:,0],15,normed=True,alpha=.8)
+    n2,bins,patches=plt.hist(Nucleus2[:,0],15,normed=True,alpha=.7)
     if max(n1)<=max(n2):
-        plt.plot(r,WoodsSaxon(Particle)*max(n2),lw=2.5)
+        plt.plot(r,WoodsSaxon(Particle,v)*max(n2)/max(WoodsSaxon(Particle,v)),lw=2.5)
     else:
-        plt.plot(r,WoodsSaxon(Particle)*max(n1),lw=2.5)
+        plt.plot(r,WoodsSaxon(Particle,v)*max(n1)/max(WoodsSaxon(Particle,v)),lw=2.5)
     plt.xlabel("Radial Distance [fm]",fontsize=14)
     plt.ylabel("Density",fontsize=14)
 
