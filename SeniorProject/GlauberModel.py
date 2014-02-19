@@ -157,10 +157,10 @@ def Collider(N,Particle,Energy,v):
                 #x distance between two nucleons is: b+r1*cos(a1)-r2*cos(a2) where b is the random impact parameter, r is the radial distance from the center of the nucleus, and a is the azimuthal angle
                 #y distance between two nucleons is r1*sin(a1)-r2*sin(a2)
                 #distance between two nucleons is sqrt(x^2+y^2). If statements check to see if this value is smaller than Maxr
-                if ((b[L]+Nucleus2[p2,0]*np.cos(Nucleus2[p2,1])-Nucleus1[p1,0]*np.cos(Nucleus1[p1,1]))**2+(Nucleus2[p2,0]*np.sin(Nucleus2[p2,1])-Nucleus1[p1,0]*np.sin(Nucleus1[p1,1]))**2)**.5 <= Maxr:
+                if ((b[L]+Nucleus2[p2,0]*np.cos(Nucleus2[p2,1])-Nucleus1[p1,0]*np.cos(Nucleus1[p1,1]))**2+(Nucleus2[p2,0]*np.sin(Nucleus2[p2,1])-Nucleus1[p1,0]*np.sin(Nucleus1[p1,1]))**2)**.5 <= Maxr/2.:
                     Ncoll[L]+=1
                     #If distance between nucleons is smaller than maxr, nucleons interact and 1 collision is counted.
-                if ((b[L]+Nucleus2[p2,0]*np.cos(Nucleus2[p2,1])-Nucleus1[p1,0]*np.cos(Nucleus1[p1,1]))**2+(Nucleus2[p2,0]*np.sin(Nucleus2[p2,1])-Nucleus1[p1,0]*np.sin(Nucleus1[p1,1]))**2)**.5 > Maxr:
+                if ((b[L]+Nucleus2[p2,0]*np.cos(Nucleus2[p2,1])-Nucleus1[p1,0]*np.cos(Nucleus1[p1,1]))**2+(Nucleus2[p2,0]*np.sin(Nucleus2[p2,1])-Nucleus1[p1,0]*np.sin(Nucleus1[p1,1]))**2)**.5 > Maxr/2.:
                     count+=1
                     #If distance is greater than maxr, +1 is added to count
                 if count==A[Particle]:

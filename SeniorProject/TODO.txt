@@ -1,9 +1,13 @@
-
-Using the wood saxon parameters from the paper, determine the elements we need to use for possible collisions. Up to naturally 
-forming, stable elements up to Cf.
+Research: Cern root package for fFunction->get random
+How does this code sample and distribute nucleons and how does it compare to our distrube1D?
 
 Add side view of colliding particles (see arxiv example).
 
 Future Work: 
+
 keep track of colide1/2 arrays to choose which event you are seeing.
+
 Keeps a maximum of 50 arrays of the collision positions
+
+Build particles in 3d, check to see if particles overlap. If they do, get new values til they dont overlap
+If nucleons physically overlap (Hardcore collision) they cannot collide with any other nucleons
