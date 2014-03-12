@@ -1,29 +1,58 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
+from datetime import date
+from urllib2 import urlopen
 
 #Importing data from particle data group
-data=np.loadtxt("PDG_Data.txt",float,usecols=(0,1,2,3,4,5,6,7,8))
-Point=data[:,0]
-Plab=data[:,1] #GeV/c
-Plab_min=data[:,2]
-Plab_max=data[:,3]
-Sig=data[:,4]
-StEr_H=data[:,5]
-StEr_L=data[:,6]
-SyEr_H=data[:,7]
-SyEr_L=data[:,8]
+Y=date.today().year
+i=0
+while i<=Y-2013:
+    try:
+        TotalData = urlopen('http://pdg.lbl.gov/'+str(Y-i)+'/hadronic-xsections/rpp'+str(Y-i)+'-pp_total.dat')
+        print "Using "+str(Y-i)+" data for total cross section."
+        DataFound1=True
+        break
+    except:
+        i+=1
+        if i>Y-2013:
+            print "---\nData not found. Please check your internet connection to http://pdg.lbl.gov/2013/html/computer_read.html\n---"
+            DataFound1=False
+l=0
+while l<=Y-2013:
+    try:
+        ElasticData = urlopen('http://pdg.lbl.gov/'+str(Y-l)+'/hadronic-xsections/rpp'+str(Y-l)+'-pp_elastic.dat')
+        print "Using "+str(Y-l)+" data for elastic cross section."
+        DataFound2=True
+        break
+    except:
+        l+=1
+        if l>Y-2013:
+            print "---\nData not found. Please check your internet connection to http://pdg.lbl.gov/2013/html/computer_read.html\n---"
+            DataFound2=False
 
-Edata=np.loadtxt("EPNG_Data.txt",float,usecols=(0,1,2,3,4,5,6,7,8))
-EPoint=Edata[:,0]
-EPlab=Edata[:,1] #GeV/c
-EPlab_min=Edata[:,2]
-EPlab_max=Edata[:,3]
-ESig=Edata[:,4]
-EStEr_H=Edata[:,5]
-EStEr_L=Edata[:,6]
-ESyEr_H=Edata[:,7]
-ESyEr_L=Edata[:,8]
+if DataFound1==True:
+    data=np.loadtxt(TotalData,float,usecols=(0,1,2,3,4,5,6,7,8),skiprows=11)
+    Point=data[:,0]
+    Plab=data[:,1] #GeV/c
+    Plab_min=data[:,2]
+    Plab_max=data[:,3]
+    Sig=data[:,4]
+    StEr_H=data[:,5]
+    StEr_L=data[:,6]
+    SyEr_H=data[:,7]
+    SyEr_L=data[:,8]
+if DataFound2==True:
+    Edata=np.loadtxt(ElasticData,float,usecols=(0,1,2,3,4,5,6,7,8),skiprows=11)
+    EPoint=Edata[:,0]
+    EPlab=Edata[:,1] #GeV/c
+    EPlab_min=Edata[:,2]
+    EPlab_max=Edata[:,3]
+    ESig=Edata[:,4]
+    EStEr_H=Edata[:,5]
+    EStEr_L=Edata[:,6]
+    ESyEr_H=Edata[:,7]
+    ESyEr_L=Edata[:,8]
 
 #Fitting a function to PDG's total data
 def func(s,Z,M,Y1,Y2,n1,n2):

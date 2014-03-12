@@ -3,30 +3,18 @@ TODO:
 Add line that connects average value of ncoll/npart for each slice of constant b 
 values in plot of ncoll/npart vs. b.
 
-notebook documents refrences and how to run code.
-If ncd function is called with invalid parameters, return an error instead.
-Add default values to ncd function.
-
-Add changes to library, plot with large number of iterations. 
-
-add function to dl pdg data from web adress of current year. If not available
-go back 1 year up to 2012. If not available, output msg stating that either format has
-changed and where to find data or data is not updated yet. Output msg stating what year
-the data used is from.
-
-Add side view of colliding particles (see arxiv example).
+Fit parameters change each year due to new data?
 
 google 'inelastic cross section pp'. Look for values not in pdg or durham. Totem compilation.
 EPL96 21002 (7pp) IOP website. Add inelastic values to plot for comparison. Separate data to know
 the reference for each point. Include legend. 
 
-Add line for inelastic cross section on plot.
-
 Future Work: 
 
-Figure out how to use more cores in python. Parallel processing
 Plot graph on processing time vs N for N=1,10,100,1000,10000.
 
 keep track of colide1/2 arrays to choose which events to plot.
 
 Keeps a maximum of 50 arrays of the collision data to conserve memory.
+
+support for colliding different nuclei. Test case He-3 on Au-197 @ 200GeV.
