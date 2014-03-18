@@ -1,13 +1,13 @@
 TODO:
 
-Add line that connects average value of ncoll/npart for each slice of constant b 
-values in plot of ncoll/npart vs. b.
-
-Fit parameters change each year due to new data?
-
 google 'inelastic cross section pp'. Look for values not in pdg or durham. Totem compilation.
 EPL96 21002 (7pp) IOP website. Add inelastic values to plot for comparison. Separate data to know
 the reference for each point. Include legend. 
+http://iopscience.iop.org/0295-5075/101/2/21003/article  7TeV
+http://iopscience.iop.org/0295-5075/101/2/21003/  7TeV
+http://indico.cern.ch/event/140054/session/0/contribution/0/material/slides/0.pdf  7TeV and 2.76TeV
+http://www.cbpf.br/~icrc2013/papers/icrc2013-0792.pdf  7TeV and 8TeV
+https://indico.cern.ch/event/184925/material/slides/1?contribId=3&sessionId=0 7TeV for EPL96 (2011), CERN-PH-EP-239 (2012), and CERN-PH-EP-353 (2012)
 
 Future Work: 
 
