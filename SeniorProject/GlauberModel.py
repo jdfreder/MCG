@@ -54,130 +54,170 @@ if DataFound2==True:
     ESyEr_H=Edata[:,7]
     ESyEr_L=Edata[:,8]
 
-#Fitting a function to PDG's total data
-def func(s,Z,M,Y1,Y2,n1,n2):
-    m=.938
-    sM=(2*m+M)**2
-    hbar=6.58211928*10**-16
-    c=3e8
-    sigma=Z+np.pi*(hbar*c)**2/M**2*(np.log((s)**2/sM))**2+Y1*(sM/(s)**2)**n1-Y2*(sM/(s)**2)**n2
+def Ecm(Plab):
+    """Converts Plab momenta to center of mass energy [GeV]."""
+    E=(((Plab**2+.938**2)**(1/2.)+.938)**2-(Plab**2))**(1/2.)
+    return E
+
+E_cm=Ecm(Plab)
+eE_cm=Ecm(EPlab)
+cm_min=Ecm(Plab_min)
+cm_max=Ecm(Plab_max)
+ecm_min=Ecm(EPlab_min)
+ecm_max=Ecm(EPlab_max)
+
+#Define best fit curve given by the particle data group
+def func(s,P,H,M,R1,R2,n1,n2):
+    m=.93827 #Proton mass GeV/c^2
+    sM=(2*m+M)**2 #Mass^2 (GeV/c^2)^2
+    hbar=6.58211928*10**-25 #GeV*s
+    c=2.99792458*10**8 #m/s
+    sigma=H*(np.log(s**2/sM))**2+P+R1*(s**2/sM)**(-n1)-R2*(s**2/sM)**(-n2)
     return sigma
 
-#Func2-4 define fits for PDG's elastic data
-def func2(s,a,b):
-    return a*np.e**(b*s)+.42
-
-def func3(s,a,b):
-    return np.log(a*s)+b
-
-def func4(s,a,b):
-    return np.e**(a*np.log(s)+b)
-
-#Set up parameters to plot PDG data with fits
-s=EPlab[:]
+#Apply best fit curve to the elastic data
+s=eE_cm[:]
 y=ESig[:]
-p0=[5,2.15,12.72,7.35,.462,.55]
+p0=[4.45,.0965,2.127,11,4,.55,.55]
 popt,pcov=curve_fit(func,s,y,p0)
-sp=np.zeros(np.size(s)+1,float)
-sp[:-1]=np.copy(s)
-sp[-1]=200
-sp2=np.arange(2e3,9e3,1000)
-sp3=np.arange(8.6e3,6e8,1000)
 
-s2=Plab[:]
-y2=Sig[:]
-p0=[34.71,2.15,12.72,7.35,.462,.550]
+#Apply best fit curve to total data
+s2=E_cm[90:]
+y2=Sig[90:]
+p0=[34.49,.2704,2.127,12.98,7.38,.451,.549]
 popt2,pcov2=curve_fit(func,s2,y2,p0)
-
-g=np.arange(5,6*10**8,1000)
-SigInel=func(g,popt2[0],popt2[1],popt2[2],popt2[3],popt2[4],popt2[5])-func(g,popt[0],popt[1],popt[2],popt[3],popt[4],popt[5])
 
 def SigI(BE):
     """Returns the cross-sectional area [fm^2] for given beam energy [GeV]"""
-    if BE<4*10**3:
-        return .1*(func(BE,popt2[0],popt2[1],popt2[2],popt2[3],popt2[4],popt2[5])-func(BE,popt[0],popt[1],popt[2],popt[3],popt[4],popt[5]))
-    else:
-        return .1*(func(BE,popt2[0],popt2[1],popt2[2],popt2[3],popt2[4],popt2[5])-np.e**(9*10*-2*np.log(BE)+1.21))
+    return .1*(func(BE,popt2[0],popt2[1],popt2[2],popt2[3],popt2[4],popt2[5],popt2[6])-func(BE,popt[0],popt[1],popt[2],popt[3],popt[4],popt[5],popt[6]))
 
 def DisplayData():
     """Displays the Particle Data Group Data."""
-    plt.loglog(Plab,Sig,ls=' ',marker='.',markersize=3,color='black')
-    plt.loglog(EPlab,ESig,ls=' ',marker='.',markersize=3,color='black')
-    plt.loglog(sp,func(sp,popt[0],popt[1],popt[2],popt[3],popt[4],popt[5]),color='b',lw=1.5)
-    plt.loglog(sp2,func2(sp2,6.566,.00001),lw=1.5)
-    plt.loglog(sp3,func4(sp3,9*10**-2,1.21),color='b',lw=1.5)
-    plt.loglog(s2[100:],func(s2[100:],popt2[0],popt2[1],popt2[2],popt2[3],popt2[4],popt2[5]),color='b',lw=1.5)
-    plt.errorbar(Plab,Sig,xerr=[Plab-Plab_min,Plab_max-Plab],yerr=[StEr_L,StEr_H],ms=.5,mew=0,fmt=None,ecolor='black')
-    plt.errorbar(EPlab,ESig,xerr=[EPlab-EPlab_min,EPlab_max-EPlab],yerr=[EStEr_L,EStEr_H],ms=.5,mew=0,fmt=None,ecolor='black')
-    plt.annotate("$P_{lab}(GeV/c)$",fontsize=16,xy=(.1,1),xytext=(10e5,1.5))
-    plt.annotate("total",fontsize=11,xy=(300,60),xytext=(300,60))
-    plt.annotate("elastic",fontsize=11,xy=(300,10),xytext=(300,10))
-    plt.annotate("pp",fontsize=11,xy=(70,15),xytext=(68,18))
-    plt.ylabel("Cross Section (mb)",fontsize=12)
+    #figsize(10,7)
+    plt.loglog(E_cm,Sig,ls=' ',marker='.',markersize=3,color='black')
+    plt.loglog(eE_cm,ESig,ls=' ',marker='.',markersize=3,color='black')
+    plt.loglog(E_cm[90:],func(E_cm[90:],popt2[0],popt2[1],popt2[2],popt2[3],popt2[4],popt2[5],popt2[6]))
+    plt.loglog(E_cm,func(E_cm,popt[0],popt[1],popt[2],popt[3],popt[4],popt[5],popt[6]))
+    plt.loglog(E_cm[90:],10*SigI(E_cm[90:]))
+    plt.errorbar(E_cm,Sig,xerr=[E_cm-cm_min,cm_max-E_cm],yerr=[StEr_L,StEr_H],ms=.5,mew=0,fmt=None,ecolor='black')
+    plt.errorbar(eE_cm,ESig,xerr=[eE_cm-ecm_min,ecm_max-eE_cm],yerr=[EStEr_L,EStEr_H],ms=.5,mew=0,fmt=None,ecolor='black')
+    plt.annotate("Total",fontsize=11,xy=(7,46),xytext=(7,46))
+    plt.annotate("Elastic",fontsize=11,xy=(1000,10),xytext=(1000,10))
+    plt.annotate("Inelastic",fontsize=11,xy=(35,25),xytext=(35,25))
+    plt.title("pp Cross Section Data",fontsize=16)
+    plt.ylabel("Cross Section [mb]",fontsize=12)
+    plt.xlabel("$\sqrt{s}\,[GeV]$",fontsize=16)
     plt.ylim(1,400)
     plt.grid(which='minor',axis='y')
     plt.grid(which='major',axis='x')
 
-def WoodsSaxon(y,v):
-    """Returns the Woods-Saxon Density profile for given element or atomic number"""
-    A={'C':12,'O':16,'Al':27,'S':32,'Ca':40,'Ni':58,'Cu':63,'W':186,'Au':197,'Pb':208,'U':238}
-    if type(y)==str:
-        x=y
+parameters=np.loadtxt("WoodSaxonParameters.txt",dtype='string',delimiter='\t')
+pNucleus=parameters[:,0]
+pModel=parameters[:,1]
+pr2=parameters[:,2]
+pC_A=parameters[:,3]
+pZ_Alpha=parameters[:,4]
+pw=parameters[:,5]
+
+def NCD(Nucleus='197Au',Model='2pF',Range=2,Bins=100):
+    """Returns the Nuclear Charge Distribution for a given Nucleus with specified
+    model. Creates radial distribution from 0 to Range*nuclear radius with n 
+    number of bins. If no values are set, defaults to 197Au using two-parameter
+    Fermi model up to twice the nuclear radius with 100 bins."""
+    #For multiple models of the same nucleus takes the first set of parameters and notifies the user which parameters are used.
+    for index in range(len(pNucleus)):
+        if pNucleus[index]==Nucleus and pModel[index]==Model:
+            i=index
+    r=np.linspace(0,Range*float(pr2[i]),Bins)
+    if Model=='HO':
+        return (1+float(pZ_Alpha[i])*(r/float(pC_A[i]))**2)*np.exp(-1*(r/float(pC_A[i]))**2)
+    elif Model=='MHO':
+        print "Model not yet supported"
+    elif Model=='Mi':
+        print "Model not yet supported"
+    elif Model=='FB':
+        print "Model not yet supported"
+    elif Model=='SOG':
+        print "Model not yet supported"
+    elif Model=='2pF':
+        return 1/(1+np.exp((r-float(pC_A[i]))/float(pZ_Alpha[i])))
+    elif Model=='3pF':
+        return (1+float(pw[i])*r**2/float(pC_A[i])**2)/(1+np.exp((r-float(pC_A[i]))/float(pZ_Alpha[i])))
+    elif Model=='3pG':
+        return (1+float(pw[i])*r**2/float(pC_A[i])**2)/(1+np.exp((r**2-float(pC_A[i])**2)/float(pZ_Alpha[i])**2))
+    elif Model=='UG':
+        print "Model not yet supported"
     else:
-        for An,Val in A.iteritems():
-            if Val==y:
-                x=An
-    a={'C':0,'O':.513,'Al':.519,'S':.61,'Ca':.586,'Ni':.516,'Cu':.596,'W':.535,'Au':.535,'Pb':.546,'U':.6}
-    w={'C':0,'O':-.051,'Al':0,'S':0,'Ca':-.161,'Ni':-.1308,'Cu':0,'W':0,'Au':0,'Pb':0,'U':0}
-    R={'C':2.47,'O':2.608,'Al':3.07,'S':3.458,'Ca':3.76,'Ni':4.309,'Cu':4.2,'W':6.51,'Au':6.38,'Pb':6.68,'U':6.68}
-    r=np.arange(0,1.5*R[x]+.01,.01)
-    if v==True:
-        Rho=4*np.pi*r**2*(1+w[x]*(r**2)/(R[x]**2))/(1+np.e**((r-R[x])/a[x]))
-    else:
-        Rho=(1+w[x]*(r**2)/(R[x]**2))/(1+np.e**((r-R[x])/a[x]))
-    return Rho
+        print 'Model not found'
 
 def distribute1D(x,prob,N):
     """Takes any numerical distribution prob, on the interval defined by the array x, and returns an array of N sampled values that are statistically the same as the input data."""
-    y=prob
-    A=np.cumsum(y)/(np.cumsum(y)[(len(x)-1)])
-    z=np.random.random_sample(N)
-    B=np.searchsorted(A,z)
+    y=prob*4*pi*r**2
+    A=cumsum(y)/(cumsum(y)[(len(x)-1)])
+    z=numpy.random.random_sample(N)
+    B=searchsorted(A,z)
     return x[B]
 
-def Collider(N,Particle,Energy,v):
+def Collider(N,Particle,Energy,model,Range,Bins):
     """
     Simulates N collisions given specific Element and Center of Mass Energy [GeV]. 
     Returns the matrices that correspond to center-to-center seperation distance 
-    (Random value between 0 and 150% of the Nucleus diameter [fm]), 
+    (Random value between 0 and 200% of the Nucleus diameter [fm]), 
     Nuclei 1 and 2, number participating nucleons, and the number of binary 
     collisions. Additionally returns the interactions distance of the nucleons 
     given the choosen beam energy.
     """
-    Plab=((Energy**2/(2*.938)-.938)**2-.938**2)**(1/2.) #Convert CM energy to corresponding Plab
     
-    #wood saxon parameters
-    w={'C':0,'O':-.051,'Al':0,'S':0,'Ca':-.161,'Ni':-.1308,'Cu':0,'W':0,'Au':0,'Pb':0,'U':0}
-    A={'C':12,'O':16,'Al':27,'S':32,'Ca':40,'Ni':58,'Cu':63,'W':186,'Au':197,'Pb':208,'U':238}
-    R={'C':2.47,'O':2.608,'Al':3.07,'S':3.458,'Ca':3.76,'Ni':4.309,'Cu':4.2,'W':6.51,'Au':6.38,'Pb':6.68,'U':6.68}
-    a={'C':0,'O':.513,'Al':.519,'S':.61,'Ca':.586,'Ni':.516,'Cu':.596,'W':.535,'Au':.535,'Pb':.546,'U':.6}
     #Set Rp equal to the number of nucleons in a nucleus
-    Rp=R[Particle] 
+    for index in range(len(pNucleus)):
+        if pNucleus[index]==Particle and pModel[index]==model:
+            i=index
+    Rp=pr2[i]
     b=2*Rp*np.random.random_sample(N) #Create array of random impact parameter
-    r=np.arange(0,1.5*Rp+.01,.01) #Array for radial data used for plotting
+    r=np.linspace(0,2*Rp,Bins) #Array for radial data used for plotting
     Npart=np.zeros(N,float)
     Ncoll=np.zeros(N,float)
-    Sig1=SigI(Plab) #Find cross-sectional area from Plab from PDG fit functions. See function SigI.
-    Maxr=(float(SigI(Plab))/np.pi)**.5 #Radius within which 2 nucleons will interact
+    Maxr=(float(SigI(Energy))/np.pi)**.5 #Radius within which 2 nucleons will interact
     #Runs N number of times; each run creates a new array containing useful parameters, Ncoll, Npart, etc.
     for L in range(N):
-        Nucleus1=np.zeros((A[Particle],2),float)
-        Nucleus2=np.zeros((A[Particle],2),float)
-        Nucleus1[:,0]=distribute1D(r,WoodsSaxon(Particle,v),A[Particle])[:] #Create nuclei from woods saxon function
-        Nucleus2[:,0]=distribute1D(r,WoodsSaxon(Particle,v),A[Particle])[:]
+        Nucleus1=zeros((A[Particle],3),float)
+        Nucleus2=zeros((A[Particle],3),float)
+        Nucleus1[:,0]=distribute1D(r,NCD(Particle,model,Range,Bins),A[Particle])[:]
+        Nucleus2[:,0]=distribute1D(r,NCD(Particle,model,Range,Bins),A[Particle])[:]
         for i in range(A[Particle]):
             Nucleus1[i,1]=2*np.pi*np.random.random_sample(1) #give each nucleon in both nuclei a random azimuthal angle
             Nucleus2[i,1]=2*np.pi*np.random.random_sample(1) #from 0 to 2*pi
+            Nucleus1[i,2]=2*np.pi*np.random.random_sample(1)-pi
+            Nucleus2[i,2]=2*np.pi*np.random.random_sample(1)-pi
+
+    FailSafe=0
+    for p1 in range(A[Particle]):
+        for p1x in range(A[Particle]):
+            if p1x==p1:
+                skip1=1
+            else:
+                while np.sqrt((Nucleus1[p1,0]*np.cos(Nucleus1[p1,2])*np.cos(Nucleus1[p1,1])-Nucleus1[p1x,0]*np.cos(Nucleus1[p1x,2])*np.cos(Nucleus1[p1x,1]))**2+(Nucleus1[p1,0]*np.cos(Nucleus1[p1,2])*np.sin(Nucleus1[p1,1])-Nucleus1[p1x,0]*np.cos(Nucleus1[p1x,2])*np.sin(Nucleus1[p1x,1]))**2+(Nucleus1[p1,0]*np.sin(Nucleus1[p1,2])-Nucleus1[p1x,0]*np.sin(Nucleus1[p1x,2]))**2)<Maxr:
+                    Nucleus1[p1x,0]=distribute1D(r,NCD(Particle,model,Range,Bins),A[Particle])[p1x]
+                    Nucleus1[p1x,1]=2*np.pi*np.random.random_sample(1)
+                    Nucleus1[p1x,2]=2*np.pi*np.random.random_sample(1)-pi
+                    FailSafe+=1
+                    if FailSafe>=10000:
+                        break
+
+    FailSafe=0
+    for p2 in range(A[Particle]):
+        for p2x in range(A[Particle]):
+            if p2x==p2:
+                skip2=1
+            else:
+                while np.sqrt((Nucleus2[p2,0]*np.cos(Nucleus2[p2,2])*np.cos(Nucleus2[p2,1])-Nucleus2[p2x,0]*np.cos(Nucleus2[p2x,2])*np.cos(Nucleus2[p2x,1]))**2+(Nucleus2[p2,0]*np.cos(Nucleus2[p2,2])*np.sin(Nucleus2[p2,1])-Nucleus2[p2x,0]*np.cos(Nucleus2[p2x,2])*np.sin(Nucleus2[p2x,1]))**2+(Nucleus2[p2,0]*np.sin(Nucleus2[p2,2])-Nucleus2[p2x,0]*np.sin(Nucleus2[p2x,2]))**2)<Maxr:
+                    Nucleus2[p2x,0]=distribute1D(r,NCD(Particle,model,Range,Bins),A[Particle])[p2x]
+                    Nucleus2[p2x,1]=2*np.pi*np.random.random_sample(1)
+                    Nucleus2[p2x,2]=2*np.pi*np.random.random_sample(1)-pi
+                    FailSafe+=1
+                    if FailSafe>=10000:
+                        break
+
         Colide1=np.copy(Nucleus1) #Creates a copy of the original nuclei
         Colide2=np.copy(Nucleus2) #Colide arrays are used for plotting only
         for p1 in range(A[Particle]): #Loops through all nucleons in Nucleus 1
@@ -186,63 +226,59 @@ def Collider(N,Particle,Energy,v):
                 #x distance between two nucleons is: b+r1*cos(a1)-r2*cos(a2) where b is the random impact parameter, r is the radial distance from the center of the nucleus, and a is the azimuthal angle
                 #y distance between two nucleons is r1*sin(a1)-r2*sin(a2)
                 #distance between two nucleons is sqrt(x^2+y^2). If statements check to see if this value is smaller than Maxr
-                if ((b[L]+Nucleus2[p2,0]*np.cos(Nucleus2[p2,1])-Nucleus1[p1,0]*np.cos(Nucleus1[p1,1]))**2+(Nucleus2[p2,0]*np.sin(Nucleus2[p2,1])-Nucleus1[p1,0]*np.sin(Nucleus1[p1,1]))**2)**.5 <= Maxr/2.:
+                if ((b[L]+Nucleus2[p2,0]*np.cos(Nucleus2[p2,1])*np.cos(Nucleus2[p2,2])-Nucleus1[p1,0]*np.cos(Nucleus1[p1,1])*np.cos(Nucleus1[p1,2]))**2+(Nucleus2[p2,0]*np.sin(Nucleus2[p2,1])*np.cos(Nucleus2[p2,2])-Nucleus1[p1,0]*np.sin(Nucleus1[p1,1])*np.cos(Nucleus1[p1,2]))**2)**.5 <= Maxr:
                     Ncoll[L]+=1
                     #If distance between nucleons is smaller than maxr, nucleons interact and 1 collision is counted.
-                if ((b[L]+Nucleus2[p2,0]*np.cos(Nucleus2[p2,1])-Nucleus1[p1,0]*np.cos(Nucleus1[p1,1]))**2+(Nucleus2[p2,0]*np.sin(Nucleus2[p2,1])-Nucleus1[p1,0]*np.sin(Nucleus1[p1,1]))**2)**.5 > Maxr/2.:
+                if ((b[L]+Nucleus2[p2,0]*np.cos(Nucleus2[p2,1])*np.cos(Nucleus2[p2,2])-Nucleus1[p1,0]*np.cos(Nucleus1[p1,1])*np.cos(Nucleus1[p1,2]))**2+(Nucleus2[p2,0]*np.sin(Nucleus2[p2,1])*np.cos(Nucleus2[p2,2])-Nucleus1[p1,0]*np.sin(Nucleus1[p1,1])*np.cos(Nucleus1[p1,2]))**2)**.5 > Maxr:
                     count+=1
                     #If distance is greater than maxr, +1 is added to count
                 if count==A[Particle]:
                     #If count reaches the number of total nucleons in a nucleus, we infer that
                     #that nucleon has not hit any other nucleons in the other nucleus. Therefore
                     #this nucleon is tagged in the colide array.
-                    Colide1[p1]=1000
+                    Colide1[p1,0]=100
+                    Colide1[p1,1]=0
+                    Colide1[p1,2]=0
         for p2 in range(A[Particle]):
             count=0
             for p1 in range(A[Particle]):
-                if ((b[L]+Nucleus2[p2,0]*np.cos(Nucleus2[p2,1])-Nucleus1[p1,0]*np.cos(Nucleus1[p1,1]))**2+(Nucleus2[p2,0]*np.sin(Nucleus2[p2,1])-Nucleus1[p1,0]*np.sin(Nucleus1[p1,1]))**2)**.5 > Maxr:
+                if ((b[L]+Nucleus2[p2,0]*np.cos(Nucleus2[p2,1])*np.cos(Nucleus2[p2,2])-Nucleus1[p1,0]*np.cos(Nucleus1[p1,1])*np.cos(Nucleus1[p1,2]))**2+(Nucleus2[p2,0]*np.sin(Nucleus2[p2,1])*np.cos(Nucleus2[p2,2])-Nucleus1[p1,0]*np.sin(Nucleus1[p1,1])*np.cos(Nucleus1[p1,2]))**2)**.5 > Maxr:
                     count+=1
                 if count==A[Particle]:
-                    Colide2[p2]=1000
+                    Colide2[p2,0]=100
+                    Colide2[p2,1]=0
+                    Colide2[p2,2]=0
         #any nucleons not tagged in the colide array have therefore participated in the collisoin and are added to Npart
         for i in Colide1[:,0]:
-            if i<1000:
+            if i<100:
                 Npart[L]+=1
         for i in Colide2[:,0]:
-            if i<1000:
+            if i<100:
                 Npart[L]+=1
     return b,Nucleus1,Nucleus2,Npart,Ncoll,Maxr,Colide1,Colide2
 
-def PlotNuclei(Nucleus1,Nucleus2,Particle,v):
+def PlotNuclei(Nucleus1,Nucleus2,Particle,model,Range,Bins):
     """
     Plots a histogram showing the relation between radial distance and 
     the number of nucleons from each nucleus. 
     Blue corresponds to nucleus 1 and green to nucleus 2.
     """
-    w={'C':0,'O':-.051,'Al':0,'S':0,'Ca':-.161,'Ni':-.1308,'Cu':0,'W':0,'Au':0,'Pb':0,'U':0}
-    A={'C':12,'O':16,'Al':27,'S':32,'Ca':40,'Ni':58,'Cu':63,'W':186,'Au':197,'Pb':208,'U':238}
-    R={'C':2.47,'O':2.608,'Al':3.07,'S':3.458,'Ca':3.76,'Ni':4.309,'Cu':4.2,'W':6.51,'Au':6.38,'Pb':6.68,'U':6.68}
-    a={'C':0,'O':.513,'Al':.519,'S':.61,'Ca':.586,'Ni':.516,'Cu':.596,'W':.535,'Au':.535,'Pb':.546,'U':.6}
     Rp=R[Particle]
-    r=np.arange(0,1.5*Rp+.01,.01)
-    n1,bins,patches=plt.hist(Nucleus1[:,0],15,normed=True,alpha=1)
-    n2,bins,patches=plt.hist(Nucleus2[:,0],15,normed=True,alpha=.7)
+    r=np.arange(0,Range*Rp+.01,.01)
+    n1,bins,patches=plt.hist(Nucleus1[:,0],40,normed=True,alpha=1)
+    n2,bins,patches=plt.hist(Nucleus2[:,0],40,normed=True,alpha=.75)
     if max(n1)<=max(n2):
-        plt.plot(r,WoodsSaxon(Particle,v)*max(n2)/max(WoodsSaxon(Particle,v)),lw=2.5)
+        plt.plot(r,NCD(Particle,model,Range,Bins)*max(n2)/max(NCD(Particle,model,Range,Bins)),lw=2.5)
     else:
-        plt.plot(r,WoodsSaxon(Particle,v)*max(n1)/max(WoodsSaxon(Particle,v)),lw=2.5)
+        plt.plot(r,NCD(Particle,model,Range,Bins)*max(n1)/max(NCD(Particle,model,Range,Bins)),lw=2.5)
     plt.xlabel("Radial Distance [fm]",fontsize=14)
     plt.ylabel("Density",fontsize=14)
 
-def PlotCollision(N,Particle,ImpactDistance,Nucleus1,Nucleus2,Participants,BinaryCollisions,Maxr,Col1,Col2):
+def PlotCollisionSlice(N,Particle,ImpactDistance,Nucleus1,Nucleus2,Participants,BinaryCollisions,Maxr,Col1,Col2):
     """Plots a cross-sectional view of the colliding particles."""
     b=ImpactDistance
     Npart=Participants
     Ncoll=BinaryCollisions
-    w={'C':0,'O':-.051,'Al':0,'S':0,'Ca':-.161,'Ni':-.1308,'Cu':0,'W':0,'Au':0,'Pb':0,'U':0}
-    A={'C':12,'O':16,'Al':27,'S':32,'Ca':40,'Ni':58,'Cu':63,'W':186,'Au':197,'Pb':208,'U':238}
-    R={'C':2.47,'O':2.608,'Al':3.07,'S':3.458,'Ca':3.76,'Ni':4.309,'Cu':4.2,'W':6.51,'Au':6.38,'Pb':6.68,'U':6.68}
-    a={'C':0,'O':.513,'Al':.519,'S':.61,'Ca':.586,'Ni':.516,'Cu':.596,'W':.535,'Au':.535,'Pb':.546,'U':.6}
     Rp=R[Particle]
     N1=plt.Circle((Rp,Rp),Rp,color='b',fill=False,lw=2)
     N2=plt.Circle((Rp+b[N-1],Rp),Rp,color='g',fill=False,lw=2)
@@ -262,6 +298,26 @@ def PlotCollision(N,Particle,ImpactDistance,Nucleus1,Nucleus2,Participants,Binar
     plt.ylim((-4,26))
     plt.xlabel('Horizontal Position [fm]',fontsize=15)
     plt.ylabel('Vertical Position [fm]',fontsize=15)
+    fig.set_size_inches(6,6)
+
+def PlotCollisionHorizontal():
+    N1=plt.Circle((Rp,Rp),Rp,color='b',fill=False,lw=2)
+    N2=plt.Circle((Rp*4,Rp+b[N-1]),Rp,color='g',fill=False,lw=2)
+    fig = plt.gcf()
+    ax = plt.gca()
+    ax.plot(Rp+Nucleus1[:,0]*sin(Nucleus1[:,1]),Rp+Nucleus1[:,0]*cos(Nucleus1[:,1])*cos(Nucleus1[:,2]),'b.',ms=26,alpha=.8,mew=1,mec='blue')
+    ax.plot(4*Rp+Nucleus2[:,0]*sin(Nucleus2[:,1]),b[N-1]+Rp+Nucleus2[:,0]*cos(Nucleus2[:,1])*cos(Nucleus2[:,2]),'g.',ms=26,alpha=.8,mew=1,mec='green')
+    ax.plot(Rp+Colide1[:,0]*sin(Colide1[:,1]),Rp+Colide1[:,0]*cos(Colide1[:,1])*cos(Colide1[:,2]),'r.',ms=26,alpha=.4,mew=1,mec='red')
+    ax.plot(4*Rp+Colide2[:,0]*sin(Colide2[:,1]),b[N-1]+Rp+Colide2[:,0]*cos(Colide2[:,1])*cos(Colide2[:,2]),'y.',ms=26,alpha=.4,mew=1,mec='yellow')
+    ax.annotate("",xy=(2.5*Rp,Rp), xycoords='data',xytext=(2*Rp,Rp), textcoords='data',arrowprops=dict(arrowstyle='-|>',connectionstyle="arc"))
+    ax.annotate("",xy=(2.5*Rp,b[N-1]+Rp), xycoords='data',xytext=(3*Rp, b[N-1]+Rp), textcoords='data',arrowprops=dict(arrowstyle='-|>',connectionstyle="arc"))
+    fig.gca().add_artist(N1)
+    fig.gca().add_artist(N2)
+    zed=5*Rp
+    xlim((0,zed))
+    ylim((0,zed))
+    xlabel('Horizontal Position [fm]',fontsize=15)
+    ylabel('Vertical Position [fm]',fontsize=15)
     fig.set_size_inches(6,6)
 
 def PlotResults(b,Npart,Ncoll):
