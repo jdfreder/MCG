@@ -249,7 +249,7 @@ def Collider(N,Particle,A,Energy,model,Range,Bins):
                     #If count reaches the number of total nucleons in a nucleus, we infer that
                     #that nucleon has not hit any other nucleons in the other nucleus. Therefore
                     #this nucleon is tagged in the colide array.
-                    Colide1[p1,0]=100
+                    Colide1[p1,0]=1000
                     Colide1[p1,1]=0
                     Colide1[p1,2]=0
         for p2 in range(A):
@@ -258,15 +258,15 @@ def Collider(N,Particle,A,Energy,model,Range,Bins):
                 if ((b[L]+Nucleus2[p2,0]*np.cos(Nucleus2[p2,1])*np.cos(Nucleus2[p2,2])-Nucleus1[p1,0]*np.cos(Nucleus1[p1,1])*np.cos(Nucleus1[p1,2]))**2+(Nucleus2[p2,0]*np.sin(Nucleus2[p2,1])*np.cos(Nucleus2[p2,2])-Nucleus1[p1,0]*np.sin(Nucleus1[p1,1])*np.cos(Nucleus1[p1,2]))**2)**.5 > Maxr:
                     count+=1
                 if count==A:
-                    Colide2[p2,0]=100
+                    Colide2[p2,0]=1000
                     Colide2[p2,1]=0
                     Colide2[p2,2]=0
         #any nucleons not tagged in the colide array have therefore participated in the collisoin and are added to Npart
         for i in Colide1[:,0]:
-            if i<100:
+            if i<1000:
                 Npart[L]+=1
         for i in Colide2[:,0]:
-            if i<100:
+            if i<1000:
                 Npart[L]+=1
     return b,Nucleus1,Nucleus2,Npart,Ncoll,Maxr,Colide1,Colide2
 
