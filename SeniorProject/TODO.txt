@@ -4,14 +4,11 @@ Write methods of functions that write arrays to data files, comment lines that i
 Particles, energy, number of runs, density parameters and function, and sigI.
 Saves data with timestamp as part of save file to prevent overriding old data.
 ex. AuHe3_200Gev_04Apr2014_09-09.DAT
--Save Multiple arrays of different dimensions into one text file?
 -Iterate through lines, writing each one to output file. At beginning of each new
 array, write identifying line that can be read back in real time.
 
-File IO
-
-Integrate profile histogram function.
-
+Add all changes to library (.py) file.
+'
 Future Work: 
 
 Test case He-3 on Au-197 @ 200GeV. Au+Au @ 200 GeV. Pb+Pb at 2.76 TeV. For paper.
