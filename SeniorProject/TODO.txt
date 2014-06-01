@@ -7,7 +7,13 @@ ex. AuHe3_200Gev_04Apr2014_09-09.DAT
 -Iterate through lines, writing each one to output file. At beginning of each new
 array, write identifying line that can be read back in real time.
 
-Add all changes to library (.py) file.
+Add all changes to library (.py) file. Double check documentation, make sure code comments make sense.
+
+Email dr. Klay draft on github by saturday.
+
+Mention changes that were made to improve the code. (Ex. addition of x,y, z columns. Does not
+need to be in chronological order, etc.)
+
 '
 Future Work: 
 
