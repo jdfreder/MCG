@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from datetime import date
 from urllib2 import urlopen
 from scipy.optimize import curve_fit
+from scipy.special import j0
 import time
 
 #Importing data from particle data group
@@ -125,12 +126,20 @@ def DisplayData():
 
 #Reads in parameters to calculate nuclear charge densities (NCD)
 parameters=np.loadtxt("WoodSaxonParameters.txt",dtype='string',delimiter='\t')
+FBdata=np.loadtxt("FourierBesselParameters.txt",str,delimiter='\t')
 pNucleus=parameters[:,0]
 pModel=parameters[:,1]
 pr2=parameters[:,2]
 pC_A=parameters[:,3]
 pZ_Alpha=parameters[:,4]
 pw=parameters[:,5]
+FBnucleus=FBdata[:,0]
+FBrms=FBdata[:,1]
+FBR=FBdata[:,2]
+FBa=np.zeros((len(FBnucleus)-1,17),float)
+for i in range(len(FBnucleus)-1):
+    FBa[i,:]=FBdata[i+1,3:]
+FBa = FBa.astype(np.float)
 
 def NCD(Nucleus,Model,Range=2,Bins=100):
     """Returns the Nuclear Charge Distribution for a given Nucleus with specified
@@ -157,7 +166,16 @@ def NCD(Nucleus,Model,Range=2,Bins=100):
         print "Warning: Model not yet supported\nPlease use a different model."
         return None
     elif Model=='FB':
-        print "Warning: Fourier-Bessel Model currently contains support for He-3 only. If not simulating He-3 collisions, please choose another model."
+        #print "Warning: Fourier-Bessel Model currently contains support for He-3 only. If not simulating He-3 collisions, please choose another model."
+        for FBindex in range(len(FBnucleus)):
+            if FBnucleus[FBindex]==Nucleus:
+                iFB=FBindex
+        r=np.linspace(0,float(FBR[iFB]),Bins)
+        p=np.zeros(np.size(r),float)
+        v=np.arange(0,17,1)
+        for i in range(len(r)):
+            p[i]=abs(sum(FBa[iFB-1,v]*j0((v+1)*np.pi*r[i]/float(FBR[iFB]))))
+        return p
     elif Model=='SOG':
         print "Warning: Model not yet supported\nPlease use a different model."
         return None
@@ -198,7 +216,8 @@ def Collider(N,Particle1,A1,Particle2,A2,model1,model2,Energy,bRange=1.1,Range=2
     #Set Rp1 and Rp2 equal to the radii of the nuclei choosen
     j1=[]
     j2=[]
-    i1,i2="Unassigned","Unassigned"
+    i1="Unassigned"
+    i2="Unassigned"
     for index in range(len(pNucleus)):
         if pNucleus[index]==Particle1 and pModel[index]==model1:
             j1.append(index)
@@ -215,11 +234,29 @@ def Collider(N,Particle1,A1,Particle2,A2,model1,model2,Energy,bRange=1.1,Range=2
     if i1=="Unassigned" or i2=="Unassigned":
         print 'Error: Model not found\nPlease check that the model was typed in correctly. (Case Sensitive)'
         return None,None,None,None,None,None,None,None
-    Rp1=float(pr2[i1])
-    Rp2=float(pr2[i2])
+    if model1 != 'FB':
+        Rp1=float(pr2[i1])
+    else:
+        for FBindex in range(len(FBnucleus)):
+            if FBnucleus[FBindex]==Particle1:
+                iFB=FBindex
+        Rp1=float(FBR[iFB])
+    if model2 != 'FB':
+        Rp2=float(pr2[i2])
+    else:
+        for FBindex in range(len(FBnucleus)):
+            if FBnucleus[FBindex]==Particle2:
+                iFB=FBindex
+        Rp2=float(FBR[iFB])
     b=(Rp1+Rp2)*bRange*np.random.random_sample(N) #Create array of random impact parameters
-    r1=np.linspace(0,2*Rp1,Bins) #Array of radial data used for plotting
-    r2=np.linspace(0,2*Rp2,Bins)
+    if model1 != 'FB':
+        r1=np.linspace(0,Range*Rp1,Bins) #Array of radial data used for plotting
+    else:
+        r1=np.linspace(0,Rp1,Bins)
+    if model2 != 'FB':
+        r2=np.linspace(0,Range*Rp2,Bins)
+    else:
+        r2=np.linspace(0,Rp2,Bins)
     Npart=np.zeros(N,float)
     Ncoll=np.zeros(N,float)
     Maxr=np.sqrt(SigI(Energy)/np.pi) #Radius within which two nucleons will interact
@@ -306,16 +343,26 @@ def PlotNuclei(Nucleus1,Nucleus2,Particle1,Particle2,model1,model2,Rp1,Rp2,Range
     cummulative distribution of the nucleons in each nucleus.
     Blue corresponds to nucleus 1 and green to nucleus 2.
     """
-    r1=np.linspace(0,2*Rp1,Bins)
-    r2=np.linspace(0,2*Rp2,Bins)
-    n1,bins,patches=plt.hist(Nucleus1[:,0],40,normed=True,cumulative=-1,alpha=.75,label=str(Particle1)+ " nucleons")
-    n2,bins,patches=plt.hist(Nucleus2[:,0],40,normed=True,cumulative=-1,alpha=.75,label=str(Particle2)+" nucleons")
-    if max(n1)>max(n2):
-        plt.plot(r1,NCD(Particle1,model1,Range,Bins)*max(n1),lw=2.5,label=str(Particle1)+" Radial Density")
-        plt.plot(r2,NCD(Particle2,model2,Range,Bins)*max(n1),lw=2.5,label=str(Particle2)+" Radial Density")
+    if model1 != 'FB':
+        Range1=Range
     else:
-        plt.plot(r1,NCD(Particle1,model1,Range,Bins)*max(n2),lw=2.5,label=str(Particle1)+" Radial Density")
-        plt.plot(r2,NCD(Particle2,model2,Range,Bins)*max(n2),lw=2.5,label=str(Particle2)+" Radial Density")
+        Range1=1
+    if model2 != 'FB':
+        Range2=Range
+    else:
+        Range2=1
+    r1=np.linspace(0,Range1*Rp1,Bins)
+    r2=np.linspace(0,Range2*Rp2,Bins)
+    #n1,bins,patches=plt.hist(Nucleus1[:,0],40,normed=True,alpha=.75,label=str(Particle1)+ " nucleons")
+    #n2,bins,patches=plt.hist(Nucleus2[:,0],40,normed=True,alpha=.75,label=str(Particle2)+" nucleons")
+    plt.plot(r1,NCD(Particle1,model1,Range,Bins)/max(NCD(Particle1,model1,Range,Bins)),lw=2.5,label=str(Particle1)+" Radial Density")
+    plt.plot(r2,NCD(Particle2,model2,Range,Bins)/max(NCD(Particle2,model2,Range,Bins)),lw=2.5,label=str(Particle2)+" Radial Density")
+    #if max(n1)>max(n2):
+        #plt.plot(r1,NCD(Particle1,model1,Range,Bins)*max(n1),lw=2.5,label=str(Particle1)+" Radial Density")
+        #plt.plot(r2,NCD(Particle2,model2,Range,Bins)*max(n1),lw=2.5,label=str(Particle2)+" Radial Density")
+    #else:
+        #plt.plot(r1,NCD(Particle1,model1,Range,Bins)*max(n2),lw=2.5,label=str(Particle1)+" Radial Density")
+        #plt.plot(r2,NCD(Particle2,model2,Range,Bins)*max(n2),lw=2.5,label=str(Particle2)+" Radial Density")
     plt.xlabel("Radial Distance [fm]",fontsize=14)
     plt.ylabel("Density",fontsize=14)
     plt.legend()
@@ -417,7 +464,7 @@ def PlotResults(b,Npart,Ncoll,Particle1,Particle2,N,Energy,bins=10):
     plt.plot(x,y,"ro",alpha=.9,label='Ncoll')
     plt.plot(x,y2,"bo",alpha=.5,label='Npart')
     plt.plot(plotx2,h2,"g-",linewidth=4,label='Avg Npart')
-    plt.plot(plotx,h,"r-",linewidth=4,label='Avg Ncoll')
+    plt.plot(plotx,h,"y-",linewidth=4,label='Avg Ncoll')
     plt.xlim(0,max(x))
     plt.ylim(0,1.1*max(y))
     plt.legend()
