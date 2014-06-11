@@ -10,6 +10,8 @@ array, write identifying line that can be read back in real time.
 Mention changes that were made to improve the code. (Ex. addition of x,y, z columns. Does not
 need to be in chronological order, etc.)
 
+#Distribution for He3 by 
+Mention alternative models for Charge density distribution that have not been implemented into code. Mention what we use to distribute helium instead.
 '
 Future Work: 
 
